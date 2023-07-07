@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,8 +26,14 @@ class RegistrationController extends AbstractController
         $user->setPassword($hashedPw);
         
         $entityManager->persist($user);
-
-        $entityManager->flush();
+        try
+        {
+            $entityManager->flush();
+        }
+        catch(UniqueConstraintViolationException $e)
+        {
+            return new Response("User already exists with this username", Response::HTTP_BAD_REQUEST);
+        }
 
         return new Response("Created user #".$user->getId());
     }
