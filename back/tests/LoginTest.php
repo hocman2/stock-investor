@@ -16,7 +16,5 @@ class LoginTest extends WebTestCase
         $this->assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $client->getResponse()->getStatusCode());
         $crawler = $client->request('GET', '/login', ["username" => "azerty", "password" => "123"]);
         $this->assertSame(Response::HTTP_BAD_REQUEST, $client->getResponse()->getStatusCode());
-    
-        
     }
 }

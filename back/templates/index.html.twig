@@ -1,0 +1,8 @@
+{% if app.user != null %}
+    <p id="username">{{app.user.getUserIdentifier()}}</p>
+{% else %}
+    {{ form(registerForm) }}
+{% endif %}
+
+
+
