@@ -1,8 +1,12 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Index{% endblock %}
+
+{% block body %}
 {% if app.user != null %}
     <p id="username">{{app.user.getUserIdentifier()}}</p>
-{% else %}
-    {{ form(registerForm) }}
 {% endif %}
+{% endblock %}
 
 
 
