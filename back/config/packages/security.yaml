@@ -13,6 +13,7 @@ security:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+
         main:
             lazy: true
             provider: app_user_provider
@@ -20,6 +21,12 @@ security:
             form_login:
                 login_path: login
                 check_path: login
+            json_login:
+                login_path: api_login
+                check_path: api_login
+            logout:
+                path: logout
+                target: index
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
