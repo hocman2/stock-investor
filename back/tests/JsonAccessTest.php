@@ -21,7 +21,7 @@ class JsonAccessTest extends ApiTestCase
         $client->request('GET', $this->buildApiRoute('verify_access'));
         $this->assertSame(Response::HTTP_FORBIDDEN, $client->getResponse()->getStatusCode());
 
-        $user = $userRepo->findOneBy(["username" => "ii"]);
+        $user = $userRepo->findOneByUsername("ii");
         $client->loginUser($user);
 
         // Access while authentified

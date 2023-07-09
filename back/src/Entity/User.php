@@ -24,8 +24,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[NotBlank(message: "Username can't be blank")]
     private ?string $username = null;
 
+    // Let's set every User to be a Player by default but this might change in the future
+    // as it might be necessary to have Users that are also players
     #[ORM\Column]
-    private array $roles = [];
+    private array $roles = ["ROLE_PLAYER"];
 
     /**
      * @var string The hashed password
@@ -34,8 +36,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[NotBlank(message: "Password can't be blank")]
     private ?string $password = null;
 
+    /*
+     *  TODO: Make some form if inheritance to have the balance field be available in a Player class instead
+     * check how inheritance works with Doctrine
+    */
     #[ORM\Column]
-    private ?float $balance = null;
+    private ?float $balance = 0.0;
 
     #[ORM\OneToMany(mappedBy: 'owner', targetEntity: Share::class, orphanRemoval: true)]
     private Collection $shares;
@@ -115,7 +121,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         // $this->plainPassword = null;
     }
 
-    public function getBalance(): ?float
+    public function getBalance(): float
     {
         return $this->balance;
     }

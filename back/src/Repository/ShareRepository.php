@@ -2,6 +2,8 @@
 
 namespace App\Repository;
 
+use App\Entity\User;
+use App\Entity\Company;
 use App\Entity\Share;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -37,6 +39,11 @@ class ShareRepository extends ServiceEntityRepository
         if ($flush) {
             $this->getEntityManager()->flush();
         }
+    }
+
+    public function findSharesForCompany(User $owner, Company $company): array
+    {
+        return $this->findBy(['company_id' => $company->getId(), 'owner_id' => $owner->getId()]);
     }
 
 //    /**
