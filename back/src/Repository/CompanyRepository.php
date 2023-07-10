@@ -44,6 +44,17 @@ class CompanyRepository extends ServiceEntityRepository
         return $this->findOneBy(['id' => $id]);
     }
 
+    public function findAllAmount(int $amount, int $offset = 0): array
+    {
+        $qb = $this->createQueryBuilder('c')
+        ->setFirstResult($offset)
+        ->setMaxResults($amount);
+
+        $query = $qb->getQuery();
+
+        return $query->execute();
+    }
+
 //    /**
 //     * @return Company[] Returns an array of Company objects
 //     */

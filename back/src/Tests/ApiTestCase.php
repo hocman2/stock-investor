@@ -5,6 +5,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Component\DomCrawler\Crawler;
 
+use App\Repository\UserRepository;
 use App\Entity\Company;
 use App\Entity\User;
 

@@ -102,4 +102,14 @@ class Company
 
         return $this;
     }
+
+    static public function toJsonArray(Company $company): array
+    {
+        return [
+            "id" => $company->getId(),
+            "name" => $company->getName(),
+            "price" => $company->getPrice(),
+            "domain_name" => ($company->getDomain() == null) ? "null" : $company->getDomain()->getName()
+        ];
+    }
 }
