@@ -18,14 +18,14 @@ class JsonAccessTest extends ApiTestCase
         $this->assertResponseIsSuccessful();
 
         // Try to access without being logged-in
-        $client->request('GET', $this->buildApiRoute('verify_access'));
-        $this->assertSame(Response::HTTP_FORBIDDEN, $client->getResponse()->getStatusCode());
+        $this->performTest($client, 'verify_access', 
+        expectedStatus: Response::HTTP_FORBIDDEN,
+        assertMsg: "Access to restricted page without authentication didn't return HTTP_FORBIDDEN");
 
         $user = $userRepo->findOneByUsername("ii");
         $client->loginUser($user);
 
         // Access while authentified
-        $client->request('GET', $this->buildApiRoute('verify_access'));
-        $this->assertResponseIsSuccessful();
+        $this->performTest($client, 'verify_access');
     }
 }

@@ -41,9 +41,9 @@ class ShareRepository extends ServiceEntityRepository
         }
     }
 
-    public function findSharesForCompany(User $owner, Company $company): array
+    public function findShareForCompany(User $owner, Company $company): Share|null
     {
-        return $this->findBy(['company_id' => $company->getId(), 'owner_id' => $owner->getId()]);
+        return $this->findOneBy(['company' => $company, 'owner' => $owner]);
     }
 
 //    /**

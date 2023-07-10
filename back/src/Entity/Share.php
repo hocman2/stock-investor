@@ -21,6 +21,11 @@ class Share
     #[ORM\JoinColumn(nullable: false)]
     private ?User $owner = null;
 
+    // It would make more sense to have 1 share object/share held but it's lighter to the database
+    // to store the amount of shares directly on the row
+    #[ORM\Column]
+    private ?int $amount = 0;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -46,6 +51,18 @@ class Share
     public function setOwner(?User $owner): static
     {
         $this->owner = $owner;
+
+        return $this;
+    }
+
+    public function getAmount(): ?int
+    {
+        return $this->amount;
+    }
+
+    public function setAmount(int $amount): static
+    {
+        $this->amount = $amount;
 
         return $this;
     }

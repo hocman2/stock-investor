@@ -4,21 +4,16 @@ namespace App\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Doctrine\ORM\EntityNotFoundException;
-use Symfony\Component\Security\Core\Exception;
-use Symfony\Bundle\SecurityBundle\Security;
 
 use App\Entity\User;
 use App\Entity\Share;
 use App\Entity\Company;
-use App\Repository\CompanyRepository;
-use App\Repository\ShareRepository;
 
 class OrderController extends AbstractController
 {
@@ -39,12 +34,14 @@ class OrderController extends AbstractController
                 return new JsonResponse("Can't find ".$param." parameter", JsonResponse::HTTP_BAD_REQUEST);
             }
         }
+
+        return null;
     }
 
     // Helper function that returns a Company object form an ID or throws a Doctrine\ORM\EntityNotFoundException
     private function retrieveCompanyWithId(int $id, EntityManagerInterface $entityManager) : Company
     {
-        $company = $entityManager->getRepository(CompanyRepository::class)->findOneById($id);
+        $company = $entityManager->getRepository(Company::class)->findOneById($id);
         
         if ($company == null)
         {
@@ -59,10 +56,14 @@ class OrderController extends AbstractController
     public function emitOrder(Request $request, EntityManagerInterface $entityManager): JsonResponse|null
     {
         $companyId = $request->get('company_id');
-        $amount = $request->get('amount');
+        $amount = intval($request->get('amount'));
         $orderType = $request->get('type');
         /**@var \App\Entity\User $user */
         $user = $this->getUser();
+
+        // Perfom various error checking before actually emitting the order
+
+        if ($amount < 1) { return new JsonResponse("Invalid amount parameter: ".$request->get("amount"), JsonResponse::HTTP_BAD_REQUEST); }
 
         $error = $this->runFailsafe($user, [
             "company_id" => $companyId,
@@ -95,19 +96,27 @@ class OrderController extends AbstractController
             return new JsonResponse("User's balance does not permit the order execution. Total order price: ".$orderPrice." Current balance: ".$user->getBalance(), JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        // Execute all orders
-        for ($i = 0; $i < $amount; ++$i)
+        // Execute order: first check if a share obj already exists for this user
+        $share = $entityManager->getRepository(Share::class)->findShareForCompany($user, $company);
+
+        // If the user doesn't hold any share create a new one
+        if ($share == null)
         {
             $share = new Share();
-            $share->setCompany($company);
-            $share->setOwner($user);
-            $entityManager->persist($share);
+            $share->setAmount(0);
         }
+
+        // Set values for share
+        $share->setCompany($company);
+        $share->setOwner($user);
+        $share->setAmount($share->getAmount() + $amount);
+        $entityManager->persist($share);
 
         // Update user's balance
         $user->setBalance($user->getBalance() - $orderPrice);
         $entityManager->persist($user);
 
+        // Execute request
         $entityManager->flush();
 
         // Return code 200
@@ -116,24 +125,32 @@ class OrderController extends AbstractController
 
     private function sellOrder(EntityManagerInterface $entityManager, User $user, Company $company, int $amount): JsonResponse
     {
-        // Check if shares exist
-        $shares = $entityManager->getRepository(ShareRepository::class)->findSharesForCompany($user, $company);
-
-        if (count($shares) < $amount)
+        // Check if share exist
+        $share = $entityManager->getRepository(Share::class)->findShareForCompany($user, $company);
+        $heldAmt = ($share == null) ? 0 : $share->getAmount();
+        
+        if ($heldAmt < $amount)
         {
-            return new JsonResponse("User does not own enough shares to execute that order. Requested sell amt: ".$this->amount." Currently owned: ".count($shares), JsonResponse::HTTP_BAD_REQUEST);
+            return new JsonResponse("User does not own enough shares to execute that order. Requested sell amt: ".$amount." Currently owned: ".$heldAmt,
+             JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        // Loop amount times because the user might own more than the requested sell amount
-        for ($i = 0; $i < $amount; ++$i)
+        // Update or remove held amount
+        if ($amount == $heldAmt)
         {
-            $entityManager->remove($shares[$i]);
+            $entityManager->remove($share);
+        }
+        else
+        {
+            $share->setAmount($heldAmt - $amount);
+            $entityManager->persist($share);
         }
 
         // Update user's balance
         $user->setBalance($user->getBalance() + $amount * $company->getPrice());
         $entityManager->persist($user);
 
+        // Execute request
         $entityManager->flush();
 
         // Return code 200
