@@ -1,30 +1,48 @@
 <script>
     import { apiEndpoint } from "../../config";
     import axios from "axios";
-    import { user } from "../../user_store";
-    import { redirect } from '@sveltejs/kit'
-    
-    let username, password;
+    import { updateUserStore } from "../../user_store";
+    import { onMount } from "svelte";
+
+    onMount(() => {
+        // Check if a logged user is trying to access the login page
+        if (localStorage.getItem('user') !== null)
+        {
+            location.replace('/');
+        }
+        else
+        {
+            // However, a user could still have a valid session ID while the local storage somehow emptied
+            axios.get(apiEndpoint + "/user_data", {
+                withCredentials: true
+            }).then(function(response)
+            {
+                updateUserStore(response);
+                location.replace("/");
+            }).catch((error) => {});
+            // If an error is received it simply means no session exists for this user
+        }
+    });
 
     function submitForm(event)
     {
         event.preventDefault();
 
         var data = {"username": username, "password": password};
-        axios.post(apiEndpoint + "/login", data).then(function(response)
+        axios.post(apiEndpoint + "/login_check", data, {withCredentials: true}).then(function(response)
         {
-            user.update((usr) =>
-            {
-                usr.id = response.data["id"];
-                usr.username = response.data["username"];
-                usr.balance = response.data["balance"];
-                return usr;
-            });
+            updateUserStore(response);
+            location.replace("/");
+
         }).catch(function(error)
         {
+            // This is where you'd display form errors
             console.log(error);
         });
+
     }
+
+    let username, password;
 </script>
 
 <form on:submit={submitForm}>

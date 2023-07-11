@@ -162,4 +162,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+
+    static public function toJsonArray(User $user): array
+    {
+        return [
+            "id" => $user->getId(),
+            "username" => $user->getUserIdentifier(),
+            "balance" => $user->getBalance(),
+        ];
+    }
 }

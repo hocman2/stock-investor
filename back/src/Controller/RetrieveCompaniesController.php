@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Repository\CompanyRepository;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -14,6 +14,7 @@ use App\Entity\Company;
 class RetrieveCompaniesController extends AbstractController
 {
     #[Route('/api/retrieve_companies', name: 'api_retrieve_companies')]
+    #[IsGranted("PUBLIC_ACCESS")]
     public function index(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $amount = $request->get('amount');

@@ -4,6 +4,7 @@ namespace App\Tests;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 use App\Repository\UserRepository;
 use App\Entity\Company;
@@ -12,6 +13,7 @@ use App\Entity\User;
 class ApiTestCase extends WebTestCase
 {
     private static $apiRoute = "/api/";
+    private string $authToken = "";
 
     public function getApiRouteBase() : string
     {
@@ -45,13 +47,14 @@ class ApiTestCase extends WebTestCase
         return $client->jsonRequest('POST', $this->buildApiRoute('register'), $data);
     }
 
+    // Creates a mock user and authenticate it
     public function registerAndLoginMockUser(KernelBrowser $client, string $username, string $password) : User
     {
         $userRepo = static::getContainer()->get(UserRepository::class);
 
         $this->registerMockUser($client, $username, $password);
         $user = $userRepo->findOneByUsername($username);
-        $client->loginUser($user);
+        $this->attemptAuth($client, $username, $password);
 
         return $user;
     }
@@ -71,8 +74,9 @@ class ApiTestCase extends WebTestCase
 
     public function performTest(KernelBrowser $client, string $uri, string $method = "GET", array $params = array(), int $expectedStatus = 200, string $assertMsg = "")
     {
+        //$client->setServerParameter("HTTP_AUTHORIZATION", "Bearer ".$this->authToken);
         $client->jsonRequest($method, $this->buildApiRoute($uri), $params);
-        $this->assertSame($expectedStatus, $client->getResponse()->getStatusCode(), $assertMsg);
+        $this->assertSame($expectedStatus, $client->getResponse()->getStatusCode(), $assertMsg." | ".$client->getResponse()->getContent());
     }
 
     public function performTestPost(KernelBrowser $client, string $uri, array $params = array(), int $expectedStatus = 200, string $assertMsg = "")
@@ -83,7 +87,9 @@ class ApiTestCase extends WebTestCase
     public function attemptAuth(KernelBrowser $client, string|null $username, string|null $password) : Crawler
     {
         $data = $this->prepareData($username, $password);
-        return $client->jsonRequest('GET', $this->buildApiRoute('login'), $data);
+        $crawler = $client->jsonRequest('GET', $this->buildApiRoute('login_check'), $data);
+
+        return $crawler;
     }
 }
 

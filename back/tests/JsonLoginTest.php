@@ -13,8 +13,6 @@ class JsonLoginTest extends ApiTestCase
         
         // Register a mock-user first
         $this->registerMockUser($client, "zizi", "123");
-        // This should pass as long as JsonRegisterTest passes
-        $this->assertResponseIsSuccessful();
 
         // Test invalid credentials
         $this->attemptAuth($client, "123", "heehee");

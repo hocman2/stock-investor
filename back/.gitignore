@@ -12,6 +12,7 @@
 
 /bin
 /config/secrets
+/config/jwt
 
 ###> symfony/phpunit-bridge ###
 .phpunit.result.cache

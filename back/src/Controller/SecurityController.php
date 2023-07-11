@@ -2,52 +2,55 @@
 
 namespace App\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Entity\User;
+use App\Controller\ApiController;
 
-class SecurityController extends AbstractController
+class SecurityController extends ApiController
 {
-    #[Route(path: '/login', name: 'login')]
+    #[Route(path:'/api/register', name:"register", methods:"POST")]
     #[IsGranted("PUBLIC_ACCESS")]
-    public function login(AuthenticationUtils $authenticationUtils): Response
+    public function register(Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $pwHasher): JsonResponse
     {
-        // get the login error if there is one
-        $error = $authenticationUtils->getLastAuthenticationError();
-        // last username entered by the user
-        $lastUsername = $authenticationUtils->getLastUsername();
+        $username = $request->get("username");
+        $password = $request->get("password");
 
-        return $this->render('security/login.html.twig', ['last_username' => $lastUsername, 'error' => $error]);
+        if (empty($username) || empty($password))
+        {
+            return $this->respondValidationError("Invalid username or password");
+        }
+
+        $user = new User();
+        $user->setUsername($username);
+        $user->setPassword($pwHasher->hashPassword($user, $password));
+        $entityManager->persist($user);
+        $entityManager->flush();
+
+        return $this->respondWithSuccess("Created user ".$user->getUsername());
     }
 
-    #[Route(path:'/api/login', name:'api_login')]
+    #[Route(path:'/api/login_check', name:'api_login_check')]
     #[IsGranted("PUBLIC_ACCESS")]
-    public function apiLogin(Request $request, AuthenticationUtils $authenticationUtils): JsonResponse
+    public function apiLogin(#[CurrentUser] ?User $user): JsonResponse
     {
-        $user = $this->getUser();
+        if ($user == null)
+        {
+            return $this->respondUnauthorized("Missing credentials");
+        }
 
-        if ($user)
-        {
-            return new JsonResponse([
-                "id" => $user->getId(),
-                "username" => $user->getUserIdentifier(),
-                "balance" => $user->getBalance(),
-            ]);
-        }
-        else
-        {
-            return new JsonResponse("Unable to process data ".$request->get("username").$request->getContent(), JsonResponse::HTTP_BAD_REQUEST);
-        }
+        return new JsonResponse(User::toJsonArray($user));
     }
 
-    #[Route(path: '/logout', name: 'logout')]
-    #[IsGranted("ROLE_USER")]
-    public function logout(): void
+    #[Route(path:'/api/user_data', name:'api_user_data')]
+    #[IsGranted('ROLE_USER')]
+    public function userData(): JsonResponse
     {
-        throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');
+        return new JsonResponse(User::toJsonArray($this->getUser()));
     }
 }
