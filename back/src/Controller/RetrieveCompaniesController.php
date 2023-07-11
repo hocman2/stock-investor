@@ -4,14 +4,15 @@ namespace App\Controller;
 
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
 use App\Entity\Company;
+use App\Controller\ApiController;
+use App\Entity\Share;
 
-class RetrieveCompaniesController extends AbstractController
+class RetrieveCompaniesController extends ApiController
 {
     #[Route('/api/retrieve_companies', name: 'api_retrieve_companies')]
     #[IsGranted("PUBLIC_ACCESS")]
@@ -37,5 +38,21 @@ class RetrieveCompaniesController extends AbstractController
         }
 
         return new JsonResponse($retData);
+    }
+
+    #[Route('/api/owned_shares', name: 'api_owned_shares')]
+    #[IsGranted("ROLE_PLAYER")]
+    public function getOwnedShares(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $shares = $entityManager->getRepository(Share::class)->findOwnedShares($this->getUser());
+
+        $data = [];
+
+        foreach ($shares as $share)
+        {
+            $data []= ["company" => $share->getCompany()->getId(), "amount" => $share->getAmount()];
+        }
+
+        return new JsonResponse($data);
     }
 }

@@ -33,11 +33,11 @@ class OrderEmissionTest extends ApiTestCase
         $dataPkg = ["company_id" => "-1", "amount" => -1];
 
         // It should fail to interpret amount parameter as an int >= 1
-        $this->performTestPost($client, $orderEndpoint, params: $dataPkg, expectedStatus: Response::HTTP_BAD_REQUEST);
+        $this->performTestPost($client, $orderEndpoint, params: $dataPkg, expectedStatus: Response::HTTP_UNPROCESSABLE_ENTITY);
         $dataPkg["amount"] = 1;
         
         // Now it should fail to find all parameters here
-        $this->performTestPost($client, $orderEndpoint, params: $dataPkg, expectedStatus: Response::HTTP_BAD_REQUEST);
+        $this->performTestPost($client, $orderEndpoint, params: $dataPkg, expectedStatus: Response::HTTP_UNPROCESSABLE_ENTITY);
         $dataPkg["type"] = "AZERTY";
 
         // Now that all required parameters are present, it should return internal server error because it can't find the company
@@ -45,7 +45,7 @@ class OrderEmissionTest extends ApiTestCase
         $dataPkg["company_id"] = $testcmp->getId();
         
         // Finally it should fail to interpret type value
-        $this->performTestPost($client, $orderEndpoint, params: $dataPkg, expectedStatus: Response::HTTP_BAD_REQUEST);
+        $this->performTestPost($client, $orderEndpoint, params: $dataPkg, expectedStatus: Response::HTTP_UNPROCESSABLE_ENTITY);
         
         $dataPkg["type"] = "BUY";
 

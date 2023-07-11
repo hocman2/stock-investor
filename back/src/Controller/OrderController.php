@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -14,8 +13,9 @@ use Doctrine\ORM\EntityNotFoundException;
 use App\Entity\User;
 use App\Entity\Share;
 use App\Entity\Company;
+use App\Controller\ApiController;
 
-class OrderController extends AbstractController
+class OrderController extends ApiController
 {
 
     // A basic failsafe that checks if user isn't null and that provided data aren't null
@@ -31,7 +31,7 @@ class OrderController extends AbstractController
         {
             if ($value == null)
             {
-                return new JsonResponse("Can't find ".$param." parameter", JsonResponse::HTTP_BAD_REQUEST);
+                return $this->respondValidationError("Can't find ".$param." parameter");
             }
         }
 
@@ -63,7 +63,7 @@ class OrderController extends AbstractController
 
         // Perfom various error checking before actually emitting the order
 
-        if ($amount < 1) { return new JsonResponse("Invalid amount parameter: ".$request->get("amount"), JsonResponse::HTTP_BAD_REQUEST); }
+        if ($amount < 1) { return $this->respondValidationError("Invalid amount parameter: ".$request->get("amount")); }
 
         $error = $this->runFailsafe($user, [
             "company_id" => $companyId,
@@ -83,7 +83,7 @@ class OrderController extends AbstractController
             case "SELL":
                 return $this->sellOrder($entityManager, $user, $company, $amount);
             default:
-                return new JsonResponse("Unknown order type ".$orderType, JsonResponse::HTTP_BAD_REQUEST);
+                return $this->respondValidationError("Unknown order type ".$orderType);
         }
     }
 
@@ -120,7 +120,7 @@ class OrderController extends AbstractController
         $entityManager->flush();
 
         // Return code 200
-        return new JsonResponse();
+        return new JsonResponse(["balance" => $user->getBalance()]);
     }
 
     private function sellOrder(EntityManagerInterface $entityManager, User $user, Company $company, int $amount): JsonResponse
@@ -154,6 +154,6 @@ class OrderController extends AbstractController
         $entityManager->flush();
 
         // Return code 200
-        return new JsonResponse();
+        return new JsonResponse(["balance" => $user->getBalance()]);
     }
 }

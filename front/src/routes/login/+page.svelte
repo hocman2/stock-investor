@@ -4,6 +4,12 @@
     import { updateUserStore } from "../../user_store";
     import { onMount } from "svelte";
 
+    function logUser(response)
+    {
+        updateUserStore(response);
+        location.replace("/");
+    }
+
     onMount(() => {
         // Check if a logged user is trying to access the login page
         if (localStorage.getItem('user') !== null)
@@ -17,8 +23,7 @@
                 withCredentials: true
             }).then(function(response)
             {
-                updateUserStore(response);
-                location.replace("/");
+                logUser(response);
             }).catch((error) => {});
             // If an error is received it simply means no session exists for this user
         }
@@ -31,9 +36,7 @@
         var data = {"username": username, "password": password};
         axios.post(apiEndpoint + "/login_check", data, {withCredentials: true}).then(function(response)
         {
-            updateUserStore(response);
-            location.replace("/");
-
+            logUser(response);
         }).catch(function(error)
         {
             // This is where you'd display form errors

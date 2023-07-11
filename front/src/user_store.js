@@ -13,25 +13,40 @@ export class User
 
 export function updateUserStore(response)
 {
-    // Return early if invalid data
-    // That check could be improved if we were to expand User class
-    if (!response.data || !response.data["id"] || !response.data["username"] || !response.data["balance"])
+    userStore.update((usr) =>
     {
-        return;
-    }
+        // Grab usr object from the local storage if it exists
+        if (localStorage !== undefined && localStorage.getItem("user"))
+        {
+            usr = JSON.parse(localStorage.getItem("user"));
+        }
 
-    user.update((usr) =>
-    {
-        usr = new User();
-        usr.id = response.data["id"];
-        usr.username = response.data["username"];
-        usr.balance = response.data["balance"];
+        // Create a new user
+        if (usr === undefined)
+        {
+            usr = new User();
+        }
+
+        // Update data
+        if (response.data.id !== undefined)
+        {
+            usr.id = response.data["id"];
+        }
+        if (response.data.username !== undefined)
+        {
+            usr.username = response.data["username"];
+        } 
+        if (response.data.balance !== undefined)
+        {
+            usr.balance = response.data["balance"];
+        }
+
         return usr;
     });
 }
 
-export const user = writable(undefined);
-user.subscribe(value => 
+export const userStore = writable(undefined);
+userStore.subscribe(value => 
     {
         if (browser && value !== undefined)
         {

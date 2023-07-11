@@ -46,6 +46,11 @@ class ShareRepository extends ServiceEntityRepository
         return $this->findOneBy(['company' => $company, 'owner' => $owner]);
     }
 
+    public function findOwnedShares(User $owner): array
+    {
+        return $this->findBy(['owner' => $owner]);
+    }
+
 //    /**
 //     * @return Share[] Returns an array of Share objects
 //     */
