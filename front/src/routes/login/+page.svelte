@@ -2,32 +2,12 @@
     import { apiEndpoint } from "../../config";
     import axios from "axios";
     import { updateUserStore } from "../../user_store";
-    import { onMount } from "svelte";
 
     function logUser(response)
     {
         updateUserStore(response.data);
         location.replace("/");
     }
-
-    onMount(() => {
-        // Check if a logged user is trying to access the login page
-        if (localStorage.getItem('user') !== null)
-        {
-            location.replace('/');
-        }
-        else
-        {
-            // However, a user could still have a valid session ID while the local storage somehow emptied
-            axios.get(apiEndpoint + "/user_data", {
-                withCredentials: true
-            }).then(function(response)
-            {
-                logUser(response);
-            }).catch((error) => {});
-            // If an error is received it simply means no session exists for this user
-        }
-    });
 
     function submitForm(event)
     {

@@ -58,7 +58,7 @@
             // This will rerun a check on wether we can buy/sell or not
             amountChanged();
 
-        }).catch((error) => {console.log(error);});
+        }).catch((error) => { location.replace("/login"); });
     }
 
     function sellOrder(id)
@@ -78,7 +78,7 @@
             // This will rerun a check on wether we can buy/sell or not
             amountChanged();
             
-        }).catch((error) => {console.log(error);});
+        }).catch((error) => { location.replace("/login"); });
     }
 
     onMount(() =>
