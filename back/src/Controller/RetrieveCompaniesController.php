@@ -40,6 +40,30 @@ class RetrieveCompaniesController extends ApiController
         return new JsonResponse($retData);
     }
 
+    #[Route('api/company_details', name: 'api_company_details')]
+    #[IsGranted("PUBLIC_ACCESS")]
+    public function getCmpDetails(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $id = $request->get("company_id");
+        if (empty($id) || $id <= 0){
+            return $this->respondValidationError("Invalid company id ".$id);
+        }
+
+        // Retrieve company
+        $company = $entityManager->getRepository(Company::class)->findOneById($id);
+        $data = Company::toJsonArray($company);
+
+        // When a user is authenticated, we also want to return how much shares he owns for this company
+        if ($this->getUser())
+        {
+            $share = $entityManager->getRepository(Share::class)->findShareForCompany($this->getUser(), $company);
+            $amount = ($share == null) ? 0 : $share->getAmount();
+            $data["share_amount"] = $amount;
+        }
+
+        return new JsonResponse($data);
+    }
+
     #[Route('/api/owned_shares', name: 'api_owned_shares')]
     #[IsGranted("ROLE_PLAYER")]
     public function getOwnedShares(Request $request, EntityManagerInterface $entityManager): JsonResponse

@@ -6,7 +6,7 @@
 
     function logUser(response)
     {
-        updateUserStore(response);
+        updateUserStore(response.data);
         location.replace("/");
     }
 
