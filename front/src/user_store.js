@@ -11,7 +11,7 @@ export class User
     }
 }
 
-export function updateUserStore(response)
+export function updateUserStore(data)
 {
     userStore.update((usr) =>
     {
@@ -21,6 +21,8 @@ export function updateUserStore(response)
             usr = JSON.parse(localStorage.getItem("user"));
         }
 
+        if (data == null) return usr;
+        
         // Create a new user
         if (usr === undefined)
         {
@@ -28,24 +30,33 @@ export function updateUserStore(response)
         }
 
         // Update data
-        if (response.data.id !== undefined)
+        if (data.id !== undefined)
         {
-            usr.id = response.data["id"];
+            usr.id = data["id"];
         }
-        if (response.data.username !== undefined)
+        if (data.username !== undefined)
         {
-            usr.username = response.data["username"];
+            usr.username = data["username"];
         } 
-        if (response.data.balance !== undefined)
+        if (data.balance !== undefined)
         {
-            usr.balance = response.data["balance"];
+            usr.balance = data["balance"];
         }
 
         return usr;
     });
 }
 
-export const userStore = writable(undefined);
+export const userStore = writable(undefined, () =>
+{
+    if (browser)
+    {
+        // Passing null data will automatically fetch localStorage item
+        updateUserStore(null);
+    }
+
+    return null;
+});
 userStore.subscribe(value => 
     {
         if (browser && value !== undefined)
