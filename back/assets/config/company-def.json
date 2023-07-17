@@ -1,45 +1,54 @@
 {
+    "domains":
+    [
+        "Technology",
+        "Food",
+        "Fashion",
+        "Sports",
+        "Robotics",
+        "Entertainment"
+    ],
     "companies": 
     [
         {
             "name": "PunnyTech Solutions",
-            "domain": "Technology with a Sense of Humor"
+            "domain": 1
         },
         {
             "name": "SnackAttack Innovations",
-            "domain": "Revolutionary Snack Food Developments"
+            "domain": 2
         },
         {
             "name": "WhiskerWorld Enterprises",
-            "domain": "Feline Fashion and Accessories"
+            "domain": 3
         },
         {
             "name": "GiggleGizmo Technologies",
-            "domain": "Silly Gadgets and Gizmos"
+            "domain": 6
         },
         {
             "name": "Dance-o-Matic Studios",
-            "domain": "Quirky Dance Lessons and Choreography"
+            "domain": 4
         },
         {
             "name": "WackyWear Apparel",
-            "domain": "Outrageously Funny Clothing and Accessories"
+            "domain": 3
         },
         {
             "name": "MemeMaster Media",
-            "domain": "Viral Content Creation and Internet Memes"
+            "domain": 6
         },
         {
             "name": "ChuckleBot Robotics",
-            "domain": "Hilarious Robots and Automated Pranks"
+            "domain": 5
         },
         {
             "name": "QuackQuack Quilting",
-            "domain": "Whimsical Quilts and Patchwork Creations"
+            "domain": 3
         },
         {
             "name": "JokeBox Industries",
-            "domain": "Comedic Entertainment and Gag Gifts"
+            "domain": 6
         }
     ]
 }
