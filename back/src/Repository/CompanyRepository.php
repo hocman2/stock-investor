@@ -44,6 +44,11 @@ class CompanyRepository extends ServiceEntityRepository
         return $this->findOneBy(['id' => $id]);
     }
 
+    public function findOneByName(string $name) : ?Company
+    {
+        return $this->findOneBy(["name" => $name]);
+    }
+
     public function findAllAmount(int $amount, int $offset = 0): array
     {
         $qb = $this->createQueryBuilder('c')

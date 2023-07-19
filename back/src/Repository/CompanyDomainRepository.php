@@ -39,6 +39,11 @@ class CompanyDomainRepository extends ServiceEntityRepository
         }
     }
 
+    public function findOneByName(string $name): ?CompanyDomain
+    {
+        return $this->findOneBy(["name" => $name]);
+    }
+
 //    /**
 //     * @return CompanyDomain[] Returns an array of CompanyDomain objects
 //     */

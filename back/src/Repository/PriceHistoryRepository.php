@@ -33,9 +33,9 @@ class PriceHistoryRepository extends ServiceEntityRepository
     }
 
     public function insertNewHistory(Company $company, LifecycleIteration $lifecycleIteration, bool $flush = false): void
-    {
+    {        
         $newHistory = new PriceHistory();
-        $newHistory->setCompany($company);
+        $newHistory->setCompanyAndPrice($company);
         $newHistory->setLifecycleIteration($lifecycleIteration);
 
         $this->save($newHistory, $flush);

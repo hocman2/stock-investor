@@ -4,6 +4,7 @@ namespace App\Command;
 
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -14,6 +15,9 @@ use App\Entity\LifecycleIteration;
 use App\Entity\PriceHistory;
 use App\Entity\CompanyDomain;
 use App\Entity\Company;
+
+use App\Repository\CompanyDomainRepository;
+use App\Repository\CompanyRepository;
 
 #[AsCommand(
     name: 'si:create-companies',
@@ -35,16 +39,22 @@ class SiCreateCompaniesCommand extends Command
         parent::__construct();
     }
 
+    protected function configure(): void
+    {
+        $this->addOption("test", mode: InputOption::VALUE_NONE, description: 'defines if a test file should be used instead');
+    }
+
     private function insertOrUpdateDomains(SymfonyStyle $io, mixed $compDefs) : int
     {
         $io->progressStart(count($compDefs->domains));
 
         // insert all domains
-        $currentId = 1;
+        /** @var CompanyDomainRepository */
+        $domainRepos = $this->entityManager->getRepository(CompanyDomain::class);
         foreach ($compDefs->domains as $domain)
         {
             // Check if a domain already exists with this id
-            $domainEntity = $this->entityManager->find(CompanyDomain::class, $currentId);
+            $domainEntity = $domainRepos->findOneByName($domain);
 
             if (!$domainEntity)
             {
@@ -54,8 +64,6 @@ class SiCreateCompaniesCommand extends Command
             $domainEntity->setName($domain);
             $this->entityManager->persist($domainEntity);
 
-            
-            ++$currentId;
             $io->progressAdvance();
         }
         
@@ -82,10 +90,13 @@ class SiCreateCompaniesCommand extends Command
 
         $io->progressStart(count($compDefs->companies));
 
-        $currentId = 1;
+        /** @var CompanyRepository */
+        $companyRepos = $this->entityManager->getRepository(Company::class);
+        /** @var CompanyDomainRepository */
+        $domainRepos = $this->entityManager->getRepository(CompanyDomain::class);
         foreach($compDefs->companies as $companyDef)
         {
-            $company = $this->entityManager->find(Company::class, $currentId);
+            $company = $companyRepos->findOneByName($companyDef->name);
             
             if (!$company)
             {
@@ -100,14 +111,13 @@ class SiCreateCompaniesCommand extends Command
 
             $company->setName($companyDef->name);
             
-            $domain = $this->entityManager->find(CompanyDomain::class, $companyDef->domain);
+            $domain = $domainRepos->findOneByName($companyDef->domain);
             $company->setDomain($domain);
 
             $this->entityManager->persist($company);
 
-            $this->createNewPriceHistory($company, $currentLifecycle);
+            $this->entityManager->getRepository(PriceHistory::class)->insertNewHistory($company, $currentLifecycle);
 
-            ++$currentId;
             $io->progressAdvance();
         }
         
@@ -128,14 +138,6 @@ class SiCreateCompaniesCommand extends Command
         return Command::SUCCESS;
     }
 
-    private function createNewPriceHistory(Company $company, LifecycleIteration $lifecycleIteration): void
-    {
-        $priceHistory = new PriceHistory();
-        $priceHistory->setLifecycleIteration($lifecycleIteration);
-        $priceHistory->setCompany($company);
-        $this->entityManager->persist($priceHistory);
-    }
-
     private function createFirstLifecycleIteration(): LifecycleIteration
     {
         $lifecycleIteration = new LifecycleIteration();
@@ -148,11 +150,13 @@ class SiCreateCompaniesCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        // Retrieve company definitions
-        $jsonPath = $this->projectDir."/assets/config/company-def.json";
+        // Retrieve company definitions either from test file or real json file
+        $useTestFile = $input->getOption("test") == "" || $input->getOption("test") == true;
+        $jsonPath = (!$useTestFile) ? $this->projectDir."/assets/config/company-def.json" : $this->projectDir."/assets/config/company-def.test.json";
+
         if (!file_exists($jsonPath))
         {
-            $io->error("Can't find file assets/config/company-def.json");
+            $io->error("Can't find file ".$jsonPath);
             return Command::FAILURE;
         }
 

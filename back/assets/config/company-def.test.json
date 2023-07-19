@@ -1,0 +1,18 @@
+{
+    "domains":
+    [
+        "DMN1",
+        "DMN2"
+    ],
+    "companies": 
+    [
+        {
+            "name": "CMP #1",
+            "domain": "DMN1"
+        },
+        {
+            "name": "CMP #2",
+            "domain": "DMN2"
+        }
+    ]
+}

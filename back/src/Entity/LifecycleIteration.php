@@ -80,4 +80,9 @@ class LifecycleIteration
 
         return $this;
     }
+
+    public function __toString(): string
+    {
+        return $this->getDate()->format("d M Y");
+    }
 }

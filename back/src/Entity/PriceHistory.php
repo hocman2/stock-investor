@@ -34,7 +34,7 @@ class PriceHistory
         return $this->company;
     }
 
-    public function setCompany(?Company $company): static
+    public function setCompanyAndPrice(?Company $company): static
     {
         $this->company = $company;
         // Automatically set price

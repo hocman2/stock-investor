@@ -147,7 +147,7 @@ class Company
     {
         if (!$this->previousPrices->contains($previousPrice)) {
             $this->previousPrices->add($previousPrice);
-            $previousPrice->setCompany($this);
+            $previousPrice->setCompanyAndPrice($this);
         }
 
         return $this;
@@ -158,10 +158,15 @@ class Company
         if ($this->previousPrices->removeElement($previousPrice)) {
             // set the owning side to null (unless already changed)
             if ($previousPrice->getCompany() === $this) {
-                $previousPrice->setCompany(null);
+                $previousPrice->setCompanyAndPrice(null);
             }
         }
 
         return $this;
+    }
+
+    public function __toString(): string
+    {
+        return $this->getName();
     }
 }

@@ -1,10 +1,12 @@
 <?php
 namespace App\Tests;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Component\DomCrawler\Crawler;
 use Doctrine\ORM\EntityManager;
+use App\Tests\DbHelpers;
 
 use App\Repository\UserRepository;
 use App\Entity\Company;
@@ -59,17 +61,9 @@ class ApiTestCase extends WebTestCase
         return $user;
     }
 
-    public function insertMockCompany(string $name, float $price) : Company
+    public function insertMockCompany(EntityManagerInterface $entityManager, string $name, float $price) : Company
     {
-        $entityManager = static::getContainer()->get(EntityManager::class);
-        $testcmp = new Company();
-        $testcmp->setName($name);
-        $testcmp->setPrice($price);
-
-        $entityManager->persist($testcmp);
-        $entityManager->flush();
-
-        return $testcmp;
+        return DbHelpers::createMockCompany($entityManager, $name, $price);
     }
 
     public function performTest(KernelBrowser $client, string $uri, string $method = "GET", array $params = array(), int $expectedStatus = 200, string $assertMsg = "")

@@ -12,43 +12,43 @@
     [
         {
             "name": "PunnyTech Solutions",
-            "domain": 1
+            "domain": "Technology"
         },
         {
             "name": "SnackAttack Innovations",
-            "domain": 2
+            "domain": "Food"
         },
         {
             "name": "WhiskerWorld Enterprises",
-            "domain": 3
+            "domain": "Fashion"
         },
         {
             "name": "GiggleGizmo Technologies",
-            "domain": 6
+            "domain": "Entertainment"
         },
         {
             "name": "Dance-o-Matic Studios",
-            "domain": 4
+            "domain": "Sports"
         },
         {
             "name": "WackyWear Apparel",
-            "domain": 3
+            "domain": "Fashion"
         },
         {
             "name": "MemeMaster Media",
-            "domain": 6
+            "domain": "Entertainment"
         },
         {
             "name": "ChuckleBot Robotics",
-            "domain": 5
+            "domain": "Robotics"
         },
         {
             "name": "QuackQuack Quilting",
-            "domain": 3
+            "domain": "Fashion"
         },
         {
             "name": "JokeBox Industries",
-            "domain": 6
+            "domain": "Entertainment"
         }
     ]
 }

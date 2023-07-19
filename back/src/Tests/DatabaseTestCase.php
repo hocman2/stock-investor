@@ -8,6 +8,31 @@ use Symfony\Component\HttpKernel\KernelInterface;
 use App\Entity\LifecycleIteration;
 use App\Entity\Company;
 
+class DbHelpers
+{
+    static public function createMockCompany(EntityManagerInterface $entityManager, string $name, float $price, float $trend = 0.0): ?Company
+    {
+        $testcmp = new Company();
+        $testcmp->setName($name);
+        $testcmp->setPrice($price);
+        $testcmp->setTrend($trend);
+
+        $entityManager->persist($testcmp);
+        $entityManager->flush();
+
+        return $testcmp;
+    }
+
+    static public function createNextLifecycleIteration(EntityManagerInterface $entityManager): ?LifecycleIteration
+    {
+            // Create a lifecycle iter
+            $newLifecycle = new LifecycleIteration();
+            $entityManager->persist($newLifecycle);
+            $entityManager->flush();
+            return $newLifecycle;
+    }
+}
+
 class DatabaseTestCase extends KernelTestCase
 {
     protected EntityManagerInterface $entityManager;
@@ -25,15 +50,7 @@ class DatabaseTestCase extends KernelTestCase
     {
         try
         {
-            $testcmp = new Company();
-            $testcmp->setName($name);
-            $testcmp->setPrice($price);
-            $testcmp->setTrend(0.0);
-    
-            $this->entityManager->persist($testcmp);
-            $this->entityManager->flush();
-    
-            return $testcmp;
+            return DbHelpers::createMockCompany($this->entityManager, $name, $price);
         }
         catch(\Exception $e)
         {
@@ -48,10 +65,7 @@ class DatabaseTestCase extends KernelTestCase
         try
         {
             // Create a lifecycle iter
-            $newLifecycle = new LifecycleIteration();
-            $this->entityManager->persist($newLifecycle);
-            $this->entityManager->flush();
-            return $newLifecycle;
+            return DbHelpers::createNextLifecycleIteration($this->entityManager);
         }
         catch(\Exception $e)
         {

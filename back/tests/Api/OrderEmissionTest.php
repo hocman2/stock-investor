@@ -18,7 +18,7 @@ class OrderEmissionTest extends ApiTestCase
         $shareRepo = static::getContainer()->get(ShareRepository::class);
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
 
-        $testcmp = $this->insertMockCompany("testcmp", 10.0);
+        $testcmp = $this->insertMockCompany($entityManager, "testcmp", 10.0);
         $orderEndpoint = "emit_order";
 
         // First try to access without being authentified
