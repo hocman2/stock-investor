@@ -40,7 +40,7 @@ class RetrieveCompaniesController extends ApiController
         return new JsonResponse($retData);
     }
 
-    #[Route('api/company_details/{id}', name: 'api_company_details', requirements:'\d+')]
+    #[Route('api/company_details/{id}', name: 'api_company_details')]
     #[IsGranted("PUBLIC_ACCESS")]
     public function getCmpDetails(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {

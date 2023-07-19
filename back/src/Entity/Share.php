@@ -14,11 +14,11 @@ class Share
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'shares')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
     private ?Company $company = null;
 
     #[ORM\ManyToOne(inversedBy: 'shares')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
     private ?User $owner = null;
 
     // It would make more sense to have 1 share object/share held but it's lighter to the database

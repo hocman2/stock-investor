@@ -5,9 +5,11 @@ namespace App\Entity;
 use App\Repository\CompanyRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: CompanyRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 class Company
 {
     #[ORM\Id]
@@ -25,11 +27,19 @@ class Company
     private Collection $shares;
 
     #[ORM\ManyToOne(inversedBy: 'companies')]
+    #[ORM\JoinColumn(onDelete: "SET NULL")]
     private ?CompanyDomain $domain = null;
+
+    #[ORM\Column]
+    private ?float $trend = null;
+
+    #[ORM\OneToMany(mappedBy: 'company', targetEntity: PriceHistory::class, orphanRemoval: true)]
+    private Collection $previousPrices;
 
     public function __construct()
     {
         $this->shares = new ArrayCollection();
+        $this->previousPrices = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -111,5 +121,47 @@ class Company
             "price" => $company->getPrice(),
             "domain_name" => ($company->getDomain() == null) ? "null" : $company->getDomain()->getName()
         ];
+    }
+
+    public function getTrend(): ?float
+    {
+        return $this->trend;
+    }
+
+    public function setTrend(float $trend): static
+    {
+        $this->trend = $trend;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PriceHistory>
+     */
+    public function getPreviousPrices(): Collection
+    {
+        return $this->previousPrices;
+    }
+
+    public function addPreviousPrice(PriceHistory $previousPrice): static
+    {
+        if (!$this->previousPrices->contains($previousPrice)) {
+            $this->previousPrices->add($previousPrice);
+            $previousPrice->setCompany($this);
+        }
+
+        return $this;
+    }
+
+    public function removePreviousPrice(PriceHistory $previousPrice): static
+    {
+        if ($this->previousPrices->removeElement($previousPrice)) {
+            // set the owning side to null (unless already changed)
+            if ($previousPrice->getCompany() === $this) {
+                $previousPrice->setCompany(null);
+            }
+        }
+
+        return $this;
     }
 }

@@ -4,7 +4,7 @@ namespace App\Tests;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Component\DomCrawler\Crawler;
-use Symfony\Component\HttpFoundation\JsonResponse;
+use Doctrine\ORM\EntityManager;
 
 use App\Repository\UserRepository;
 use App\Entity\Company;
@@ -61,7 +61,7 @@ class ApiTestCase extends WebTestCase
 
     public function insertMockCompany(string $name, float $price) : Company
     {
-        $entityManager = static::getContainer()->get('doctrine.orm.entity_manager');
+        $entityManager = static::getContainer()->get(EntityManager::class);
         $testcmp = new Company();
         $testcmp->setName($name);
         $testcmp->setPrice($price);
