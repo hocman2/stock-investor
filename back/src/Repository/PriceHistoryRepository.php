@@ -50,6 +50,14 @@ class PriceHistoryRepository extends ServiceEntityRepository
         }
     }
 
+    public function findHistoryFor(Company $company, LifecycleIteration $at): ?PriceHistory
+    {
+        return $this->findOneBy([
+            "company" => $company,
+            "lifecycleIteration" => $at
+        ]);
+    }
+
 //    /**
 //     * @return PriceHistory[] Returns an array of PriceHistory objects
 //     */

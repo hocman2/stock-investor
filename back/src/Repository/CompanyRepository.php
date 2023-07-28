@@ -3,6 +3,12 @@
 namespace App\Repository;
 
 use App\Entity\Company;
+use App\Entity\LifecycleIteration;
+use App\Entity\PriceHistory;
+
+use App\Repository\LifecycleIterationRepository;
+use App\Repository\PriceHistoryRepository;
+
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -44,6 +50,30 @@ class CompanyRepository extends ServiceEntityRepository
         return $this->findOneBy(['id' => $id]);
     }
 
+    /**
+     * Update a company's price and create a new history element for the current lifecycle iteration
+     * History creation is not guaranteed as there might not be any current lifecycle iteration (unlikely)
+     * or a history element already exists for this company at this lifecycle iteration
+     */
+    public function updatePriceAndCreateHistory(Company $entity, float $newPrice, bool $flush = false)
+    {
+        $entity->setPrice($newPrice);
+
+        $this->createHistory($entity);
+
+        $this->save($entity, $flush);
+    }
+
+    /**
+     * Persists (and flush if specified) the passed entity and create a new history element at current lifecycle iteration
+     * History creation is not guaranteed as there might not be any current lifecycle (unlikely)
+     */
+    public function insertWithHistory(Company $entity, bool $flush = false)
+    {
+        $this->createHistory($entity);
+        $this->save($entity, $flush);
+    }
+
     public function findOneByName(string $name) : ?Company
     {
         return $this->findOneBy(["name" => $name]);
@@ -58,6 +88,24 @@ class CompanyRepository extends ServiceEntityRepository
         $query = $qb->getQuery();
 
         return $query->execute();
+    }
+
+    private function createHistory(Company $entity)
+    {
+        /** @var LifecycleIteration */
+        $currentLifecycle = $this->getEntityManager()->getRepository(LifecycleIteration::class)->current();
+        
+        // No current lifecycle iteration ?
+        if ($currentLifecycle == null) return;
+
+        /** @var PriceHistoryRepository */
+        $priceHistoryRepos = $this->getEntityManager()->getRepository(PriceHistory::class);
+        $priceHistory = $priceHistoryRepos->findHistoryFor($entity, $currentLifecycle);
+
+        // We don't want to override an already existing price history
+        if ($priceHistory) return;
+
+        $priceHistoryRepos->insertNewHistory($entity, $currentLifecycle);
     }
 
 //    /**

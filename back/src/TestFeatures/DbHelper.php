@@ -6,6 +6,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\LifecycleIteration;
 use App\Entity\Company;
 
+use App\Repository\CompanyRepository;
+
 class DbHelper
 {
     private $entityManager = null;
@@ -20,15 +22,24 @@ class DbHelper
         return $this->entityManager;
     }
 
-    public function createMockCompany(string $name, float $price, float $trend = 0.0): ?Company
+    public function createMockCompany(string $name, float $price, float $trend = 0.0, bool $createHistory = false): ?Company
     {
         $testcmp = new Company();
         $testcmp->setName($name);
         $testcmp->setPrice($price);
         $testcmp->setTrend($trend);
 
-        $this->entityManager->persist($testcmp);
-        $this->entityManager->flush();
+        /** @var CompanyRepository */
+        $compRepos = $this->entityManager->getRepository(Company::class);
+
+        if ($createHistory)
+        {
+            $compRepos->insertWithHistory($testcmp, true);
+        }
+        else
+        {
+            $compRepos->save($testcmp, true);
+        }
 
         return $testcmp;
     }

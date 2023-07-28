@@ -3,11 +3,14 @@
 namespace App\Tests\DatabaseLogic;
 
 use Doctrine\ORM\EntityManagerInterface;
+
 use App\Entity\Company;
 use App\Entity\LifecycleIteration;
-use App\Repository\LifecycleIterationRepository;
-use App\Repository\PriceHistoryRepository;
+
+use App\Repository\CompanyRepository;
+
 use App\TestFeatures\DbHelper;
+
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 class PriceHistoryTest extends KernelTestCase
@@ -21,10 +24,9 @@ class PriceHistoryTest extends KernelTestCase
 
     public function testPriceHistory(): void
     {
-        /** @var PriceHistoryRepository */
-        $priceHistory = static::getContainer()->get(PriceHistoryRepository::class);
-        /** @var LifecycleIterationRepository */
-        $lifecycleRepos = static::getContainer()->get(LifecycleIterationRepository::class);
+        /** @var CompanyRepository */
+        $compRepos = static::getContainer()->get(CompanyRepository::class);
+
         $dbHelp = new DbHelper(static::getContainer()->get(EntityManagerInterface::class));
         $entityManager = $dbHelp->getEntityManager();
 
@@ -32,8 +34,7 @@ class PriceHistoryTest extends KernelTestCase
 
         // prepare the database with a mock company and a first history element
         $lifecycleIt = $dbHelp->createNextLifecycleIteration();
-        $testComp = $dbHelp->createMockCompany("hello", 10.0);
-        $priceHistory->insertNewHistory($testComp, $lifecycleIt, true);
+        $testComp = $dbHelp->createMockCompany("hello", 10.0, createHistory: true);
 
         $this->refreshEntities($entityManager, $testComp, $lifecycleIt);
 
@@ -44,15 +45,12 @@ class PriceHistoryTest extends KernelTestCase
         $lifecycleIt = $dbHelp->createNextLifecycleIteration();
 
         // update company's price
-        $testComp->setPrice(12.0);
-        $entityManager->persist($testComp);
-        // Flushing done while inserting new history element
-        $priceHistory->insertNewHistory($testComp, $lifecycleIt, true);
+        $compRepos->updatePriceAndCreateHistory($testComp, 12.0, true);
 
         // Refresh entities
         $this->refreshEntities($entityManager, $testComp, $lifecycleIt);
 
-        // Still only one history for this lifecycle
+        // only one history for this lifecycle
         $this->assertSame(count($lifecycleIt->getPrices()->toArray()), 1);
 
         // However this company now has 2 history elements, validate their data
