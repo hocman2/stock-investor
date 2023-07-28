@@ -58,4 +58,12 @@ class PriceHistory
 
         return $this;
     }
+
+    public static function toJsonArray(PriceHistory $priceHistory): array
+    {
+        return [
+            "price" => $priceHistory->getPrice(),
+            "date" => $priceHistory->getLifecycleIteration()->getDate()
+        ];
+    }
 }

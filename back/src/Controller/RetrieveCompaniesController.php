@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
 use App\Entity\Company;
+use App\Entity\PriceHistory;
 use App\Controller\ApiController;
 use App\Entity\Share;
 
@@ -42,15 +43,15 @@ class RetrieveCompaniesController extends ApiController
 
     #[Route('api/company_details/{id}', name: 'api_company_details')]
     #[IsGranted("PUBLIC_ACCESS")]
-    public function getCmpDetails(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function getCmpDetails(int $id, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         if (empty($id) || $id <= 0){
-            return $this->respondValidationError("Invalid company id ".$id);
+            return $this->respondValidationError("Invalid company id ".strval($id));
         }
 
         // Retrieve company
         $company = $entityManager->getRepository(Company::class)->findOneById($id);
-        $data = Company::toJsonArray($company);
+        $data["company"] = Company::toJsonArray($company);
 
         // When a user is authenticated, we also want to return how much shares he owns for this company
         if ($this->getUser())
@@ -58,6 +59,15 @@ class RetrieveCompaniesController extends ApiController
             $share = $entityManager->getRepository(Share::class)->findShareForCompany($this->getUser(), $company);
             $amount = ($share == null) ? 0 : $share->getAmount();
             $data["share_amount"] = $amount;
+        }
+
+        // Add price history in the results
+        $prices = $entityManager->getRepository(PriceHistory::class)->getPreviousPricesOrdered($company);
+        $data["prices"] = [];
+        
+        foreach($prices as $historyElement)
+        {
+            $data["prices"] []= PriceHistory::toJsonArray($historyElement);
         }
 
         return new JsonResponse($data);

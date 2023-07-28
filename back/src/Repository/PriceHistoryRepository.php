@@ -58,6 +58,18 @@ class PriceHistoryRepository extends ServiceEntityRepository
         ]);
     }
 
+    public function getPreviousPricesOrdered(Company $entity): array
+    {
+        $qb = $this->createQueryBuilder('p');
+        $qb->select('p', 'l')
+        ->join('p.lifecycleIteration', 'l')
+        ->where($qb->expr()->eq('p.company', ':company'))
+        ->setParameter(":company", $entity)
+        ->orderBy('l.date', 'ASC');
+
+        return $qb->getQuery()->getResult();
+    }
+
 //    /**
 //     * @return PriceHistory[] Returns an array of PriceHistory objects
 //     */
