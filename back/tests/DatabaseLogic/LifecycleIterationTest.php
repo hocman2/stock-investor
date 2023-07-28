@@ -1,15 +1,17 @@
 <?php
 
-namespace App\Tests;
+namespace App\Tests\DatabaseLogic;
 
+use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\LifecycleIterationRepository;
-use App\Tests\DatabaseTestCase;
+use App\TestFeatures\DbHelper;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
-class LifecycleIterationTest extends DatabaseTestCase
+class LifecycleIterationTest extends KernelTestCase
 {
     public function testLifecycleIteration(): void
     {
-        $kernel = self::bootKernel();
+        $dbHelp = new DbHelper(static::getContainer()->get(EntityManagerInterface::class));
 
         /** @var LifecycleIterationRepository */
         $lifecycleRepos = self::getContainer()->get(LifecycleIterationRepository::class);
@@ -21,7 +23,7 @@ class LifecycleIterationTest extends DatabaseTestCase
         for ($i = 1; $i <= 10; ++$i)
         {
             // Create a new lifecycle iteration and check if the repository returns the last one
-            $newLifecycle = $this->createNextLifecycleIteration();
+            $newLifecycle = $dbHelp->createNextLifecycleIteration();
             $currentLifecycle = $lifecycleRepos->current();
             $this->assertSame($newLifecycle->getId(), $currentLifecycle->getId());
         }

@@ -1,30 +1,36 @@
 <?php
 
-namespace App\Tests;
+namespace App\Tests\Api;
 
-use App\Tests\TestsApiTestCase;
+use App\TestFeatures\ApiTestFeatures;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
 
-class JsonRegisterTest extends ApiTestCase
+class JsonRegisterTest extends WebTestCase
 {
     public function testRegistration(): void
     {
         $client = static::createClient();
+        $apiTest = new ApiTestFeatures($client);
 
         // Register with incomplete data
-        $this->registerMockUser($client, "", null);
+        $apiTest->registerMockUser("", null);
         $this->assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $client->getResponse()->getStatusCode());
         
         // Register with blank data
-        $this->registerMockUser($client, "", "");
+        $apiTest->registerMockUser("", "");
         $this->assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $client->getResponse()->getStatusCode());
         
         // Register with good data
-        $this->registerMockUser($client, "caca", "123");
+        $apiTest->registerMockUser("caca", "123");
         $this->assertResponseIsSuccessful();
-
+        
         // Try to register with the same username
-        $this->registerMockUser($client, "caca", "123");
+        $client->catchExceptions(false); // shuts up error message
+        $this->expectException(UniqueConstraintViolationException::class);
+        $apiTest->registerMockUser("caca", "123");
         $this->assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $client->getResponse()->getStatusCode());
+        $client->catchExceptions(true);
     }
 }
