@@ -6,7 +6,9 @@
 
     /** @type {import('./$types').PageData} */
     export let data;
+    console.log(data);
 
+    let company = data.company;
     let user = $userStore;
     let currentAmount = 1;
 
@@ -21,7 +23,7 @@
         // disable sell/buy button based on some logic
 
         const buyBtn = document.getElementsByClassName("buy-btn")[0];
-        if (currentAmount * data.price > user.balance)
+        if (currentAmount * company.price > user.balance)
         {
             buyBtn.disabled = true;
         } 
@@ -83,14 +85,17 @@
 
     onMount(() =>
     {
-        amountChanged();
+        if (user)
+        {
+            amountChanged();
+        }
     });
 
 </script>
 
-<h1>{data.name} — ${data.price}</h1>
-{#if data.domain_name != "null"}
-    <h2>{data.domain_name}</h2>
+<h1>{company.name} — ${company.price}</h1>
+{#if company.domain_name != "null"}
+    <h2>{company.domain_name}</h2>
 {/if}
 
 {#if user}
@@ -106,7 +111,7 @@
     <input name="amount" type="number" bind:value={currentAmount} on:change={amountChanged}/>
 </div>
 <div>
-    <button on:click={buyOrder(data.id)} class="buy-btn">Buy</button>
-    <button on:click={sellOrder(data.id)} class="sell-btn">Sell</button>
+    <button on:click={() => {buyOrder(company.id)} } class="buy-btn">Buy</button>
+    <button on:click={() => {sellOrder(company.id)} } class="sell-btn">Sell</button>
 </div>
 {/if}

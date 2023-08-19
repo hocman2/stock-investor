@@ -16,31 +16,31 @@ export function updateUserStore(data)
     userStore.update((usr) =>
     {
         // Grab usr object from the local storage if it exists
-        if (localStorage !== undefined && localStorage.getItem("user"))
+        if (localStorage && localStorage.getItem("user"))
         {
             usr = JSON.parse(localStorage.getItem("user"));
         }
 
-        if (data == null) return usr;
+        if (!data) return usr;
         
         // Create a new user
-        if (usr === undefined)
+        if (!usr)
         {
             usr = new User();
         }
 
         // Update data
-        if (data.id !== undefined)
+        if (data.id)
         {
-            usr.id = data["id"];
+            usr.id = data.id;
         }
-        if (data.username !== undefined)
+        if (data.username)
         {
-            usr.username = data["username"];
+            usr.username = data.username;
         } 
-        if (data.balance !== undefined)
+        if (data.balance)
         {
-            usr.balance = data["balance"];
+            usr.balance = data.balance;
         }
 
         return usr;
@@ -57,9 +57,10 @@ export const userStore = writable(undefined, () =>
 
     return null;
 });
+
 userStore.subscribe(value => 
     {
-        if (browser && value !== undefined)
+        if (browser && value)
         {
             localStorage.setItem("user", JSON.stringify(value));
         }
