@@ -1,12 +1,20 @@
 <script>
     import { apiEndpoint } from "../../config";
     import axios from "axios";
-    import { updateUserStore } from "../../user_store";
+    import { userStore, updateUserStore } from "../../user_store";
+    import { onMount } from 'svelte';
+
+    let user = $userStore;
 
     function logUser(response)
     {
         updateUserStore(response.data);
-        location.replace("/");
+        redirect();
+    }
+
+    function redirect()
+    {
+        history.back();
     }
 
     function submitForm(event)
@@ -22,8 +30,15 @@
             // This is where you'd display form errors
             console.log(error);
         });
-
     }
+
+    onMount(() => 
+    {
+        if (user)
+        {
+            redirect();
+        }
+    });
 
     let username, password;
 </script>
