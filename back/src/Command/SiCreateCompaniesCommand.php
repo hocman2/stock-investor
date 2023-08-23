@@ -24,7 +24,7 @@ use App\Repository\CompanyRepository;
     description: '
     Populate database from the company-def.json file in assets. 
     If the database is already populated, elements will be updated. Prices and trends will be regenerated randomly 
-    Creates a new lifecycle iteration or uses the latest one.
+    If no lifecycle iteration exists, a new one is created.
     Creates a new price history for the current lifecycle iteration for each company',
 )]
 class SiCreateCompaniesCommand extends Command

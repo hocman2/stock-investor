@@ -95,7 +95,7 @@ class CompanyRepository extends ServiceEntityRepository
         /** @var LifecycleIteration */
         $currentLifecycle = $this->getEntityManager()->getRepository(LifecycleIteration::class)->current();
         
-        // No current lifecycle iteration ?
+        // No current lifecycle iteration ? this shouldn't happen
         if ($currentLifecycle == null) return;
 
         /** @var PriceHistoryRepository */
