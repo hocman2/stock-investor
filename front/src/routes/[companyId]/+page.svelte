@@ -14,6 +14,7 @@
 
     let company = data.company;
     let user = $userStore;
+
     let currentAmount = 1;
 
     // Any change in the user store is reflected on this page
@@ -25,13 +26,25 @@
         // Empty plot dates
         plotDates = {};
 
+        let dateKeyFormat = (date) => { return `${date.getMonth()}/${date.getDate()}/${date.getFullYear()} | ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`; };
+        if (timeframe == "all")
+        {
+            for (let date of Object.keys(allDates))
+            {
+                date = new Date(date);
+                plotDates[dateKeyFormat(date)] = allDates[date.toISOString()];
+            }
+
+            return;
+        }
+
         // Select new dates
-        let dates = dateSelect(Object.keys(allDates), timeframe);
+        let dates = dateSelect(Object.keys(allDates).reverse(), timeframe);
 
         // Associate dates to their price
         for (let date of dates)
         {
-            plotDates[`${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`] = allDates[date.toISOString()];
+            plotDates[dateKeyFormat(date)] = allDates[date.toISOString()];
         }
     }
 
@@ -80,7 +93,10 @@
             // This will rerun a check on wether we can buy/sell or not
             amountChanged();
 
-        }).catch((error) => { location.replace("/login"); });
+        }).catch((error) => 
+        { 
+            console.log(error.message);
+        });
     }
 
     function sellOrder(id)
@@ -100,7 +116,10 @@
             // This will rerun a check on wether we can buy/sell or not
             amountChanged();
             
-        }).catch((error) => { location.replace("/login"); });
+        }).catch((error) => 
+        { 
+            console.log(error.message);
+        });
     }
 
     onMount(() =>
@@ -116,14 +135,14 @@
             allDates[new Date(priceObj.date.date + "Z").toISOString()] = priceObj.price;
         }
 
-        selectDates();
+        selectDates("1D");
 
         let ctx = document.getElementById("stock-chart").getContext('2d');
         new Chart(ctx, {
             type: 'line',
             data: {
                 labels: Object.keys(plotDates),
-                datasets: [{data: Object.values(plotDates), borderWidth: 1}],
+                datasets: [{data: Object.values(plotDates), borderWidth: 1, label:"prices"}],
             },
             options: {
                 responsive: true,
@@ -133,14 +152,14 @@
 
 </script>
 
-<h1>{company.name} — ${company.price}</h1>
+<h1>{company.name} — ${company.price.toFixed(2)}</h1>
 {#if company.domain_name != "null"}
     <h2>{company.domain_name}</h2>
 {/if}
 
 {#if user}
 <div> 
-    <span>Balance: ${user.balance}</span>
+    <span>Balance: ${user.balance.toFixed(2)}</span>
     <br>
     {#if data.share_amount > 0}
     <span>You currently own {data.share_amount} {data.share_amount == 1 ? "share" : "shares"} for this company</span>
@@ -151,8 +170,8 @@
     <input name="amount" type="number" bind:value={currentAmount} on:change={amountChanged}/>
 </div>
 <div>
-    <button on:click={() => {buyOrder(company.id)} } class="buy-btn">Buy</button>
-    <button on:click={() => {sellOrder(company.id)} } class="sell-btn">Sell</button>
+    <button on:click={ () => { buyOrder(company.id); } } class="buy-btn">Buy</button>
+    <button on:click={ () => { sellOrder(company.id); } } class="sell-btn">Sell</button>
 </div>
 
 <div style="width: 80vw; height: 80vh; display:block">

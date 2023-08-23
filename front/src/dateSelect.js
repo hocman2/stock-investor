@@ -1,3 +1,9 @@
+/**
+ * 
+ * @param {Array<string|Date>} dates Dates ordered from newest to oldest
+ * @param {string} timeframe A value that's either 1D, 1M, 3M, 1Y
+ * @returns An array of date in the selected timeframe from oldest to newest
+ */
 export default function dateSelect(dates, timeframe = "1D")
 {
     // Contains the delta in days and a trunc function specific for this timeframe
@@ -13,7 +19,7 @@ export default function dateSelect(dates, timeframe = "1D")
     }
 
     const {delta, truncFn} = timeframes[timeframe];
-    const today = dates[0]
+    const today = new Date(dates[0]);
     // Calculate the start date using delta
     const start = new Date(today - (delta * 24 * 60 * 60 * 1000));
 
@@ -22,11 +28,15 @@ export default function dateSelect(dates, timeframe = "1D")
 
     for(let date of dates)
     {
+        date = new Date(date); // convert to Date obj
+
         if (date > today) continue;
         if (date < start) break;
 
         let truncatedDate = truncFn(date);
 
+        // That date has already been inserted ?
+        // replace it with this one
         if (truncatedDate in truncDates)
         {
             // Since the og array is sorted we can just remove the last inserted element
@@ -37,5 +47,5 @@ export default function dateSelect(dates, timeframe = "1D")
         truncDates[truncatedDate] = date;
     }
 
-    return outDates;
+    return outDates.reverse();
 }
