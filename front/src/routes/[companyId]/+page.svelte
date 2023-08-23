@@ -95,7 +95,8 @@
 
         }).catch((error) => 
         { 
-            console.log(error.message);
+            // There is probably an asynchrony between local storage and session
+            window.location.href = "/check_auth";
         });
     }
 
@@ -118,7 +119,8 @@
             
         }).catch((error) => 
         { 
-            console.log(error.message);
+            // There is probably an asynchrony between local storage and session
+            window.location.href = "/check_auth";
         });
     }
 

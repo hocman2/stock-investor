@@ -1,6 +1,4 @@
 <script>
-    import axios from 'axios';
-    import { onMount } from 'svelte';
     import { userStore } from '../user_store';
 
     /** @type {import('./$types').PageData} */
@@ -11,7 +9,7 @@
 
 {#if user}
     <h1>Hello {user.username}</h1>
-    <h3>Current balance: ${user.balance}</h3>
+    <h3>Current balance: ${user.balance.toFixed(2)}</h3>
 {/if}
 
 <table>
@@ -26,7 +24,7 @@
         <tr>
             <a href={"/"+company.id}>
                 <td>{company.name}</td>
-                <td>${company.price}</td>
+                <td>${company.price.toFixed(2)}</td>
             </a>
         </tr>
         {/each}

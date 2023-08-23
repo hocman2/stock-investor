@@ -11,6 +11,19 @@ export class User
     }
 }
 
+export function clearUserStore()
+{
+    userStore.update((usr) => 
+    {
+        if (browser && localStorage.getItem('user'))
+        {
+            localStorage.removeItem("user");
+        }
+
+        return null;
+    });
+}
+
 export function updateUserStore(data)
 {
     userStore.update((usr) =>
