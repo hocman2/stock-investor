@@ -2,10 +2,15 @@
     import { userStore, updateUserStore } from '../../user_store';
     import { apiEndpoint } from '../../config';
     import { onMount } from 'svelte';
+    import dateSelect from '../../dateSelect';
     import axios from 'axios';
+    import { Chart } from 'chart.js/auto';
 
     /** @type {import('./$types').PageData} */
     export let data;
+
+    let allDates = {};
+    let plotDates = [];
 
     let company = data.company;
     let user = $userStore;
@@ -13,6 +18,22 @@
 
     // Any change in the user store is reflected on this page
     userStore.subscribe((value) => { user = value; })
+
+    // Empties and refills plotDates with dates matching the timeframe
+    function selectDates(timeframe = "1D")
+    {
+        // Empty plot dates
+        plotDates = {};
+
+        // Select new dates
+        let dates = dateSelect(Object.keys(allDates), timeframe);
+
+        // Associate dates to their price
+        for (let date of dates)
+        {
+            plotDates[`${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`] = allDates[date.toISOString()];
+        }
+    }
 
     function amountChanged()
     {
@@ -88,6 +109,26 @@
         {
             amountChanged();
         }
+
+        for (let priceObj of data.prices)
+        {
+            // Appending "Z" to indicate UTC timezone
+            allDates[new Date(priceObj.date.date + "Z").toISOString()] = priceObj.price;
+        }
+
+        selectDates();
+
+        let ctx = document.getElementById("stock-chart").getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Object.keys(plotDates),
+                datasets: [{data: Object.values(plotDates), borderWidth: 1}],
+            },
+            options: {
+                responsive: true,
+            }
+        });
     });
 
 </script>
@@ -112,5 +153,9 @@
 <div>
     <button on:click={() => {buyOrder(company.id)} } class="buy-btn">Buy</button>
     <button on:click={() => {sellOrder(company.id)} } class="sell-btn">Sell</button>
+</div>
+
+<div style="width: 80vw; height: 80vh; display:block">
+    <canvas id="stock-chart"></canvas>
 </div>
 {/if}
