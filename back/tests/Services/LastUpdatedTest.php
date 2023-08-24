@@ -18,7 +18,7 @@ class LastUpdatedTest extends KernelTestCase
         // Re-retrieve the service
         /** @var LastUpdatedCompanies */
         $lastUpdated = $container->get(LastUpdatedCompanies::class);
-        $lastUpdatedCompanies = $lastUpdated->getLastUpdated();
+        $lastUpdatedCompanies = $lastUpdated->getLastUpdated()["companies"];
 
         $this->assertSame(count($lastUpdatedCompanies), 3);
         $this->assertSame($lastUpdatedCompanies, [1, 2, 3]);

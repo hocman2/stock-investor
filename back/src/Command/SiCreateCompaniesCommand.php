@@ -151,7 +151,7 @@ class SiCreateCompaniesCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         // Retrieve company definitions either from test file or real json file
-        $useTestFile = $input->getOption("test") == "" || $input->getOption("test") == true;
+        $useTestFile = $input->getOption("test") == true;
         $jsonPath = (!$useTestFile) ? $this->projectDir."/assets/config/company-def.json" : $this->projectDir."/assets/config/company-def.test.json";
 
         if (!file_exists($jsonPath))

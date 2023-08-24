@@ -43,7 +43,7 @@ class SiUpdateCompaniesCommand extends Command
         foreach($outputInfos as $id => $val)
         {
             $infoMsg = "#{$id} – updateProb: {$outputInfos[$id]['updateProb']} – newTrend: {$outputInfos[$id]['newTrend']}";
-            if ($outputInfos[$id]["updated"])
+            if (array_key_exists("updated", $outputInfos[$id]))
             {
                 $price = number_format($outputInfos[$id]["newPrice"], 2);
                 $infoMsg = $infoMsg." — newPrice: {$price}";

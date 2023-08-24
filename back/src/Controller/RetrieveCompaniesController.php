@@ -2,12 +2,15 @@
 
 namespace App\Controller;
 
+
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
+use App\Repository\CompanyRepository;
+use App\Service\LastUpdatedCompanies;
 use App\Entity\Company;
 use App\Entity\PriceHistory;
 use App\Controller\ApiController;
@@ -17,7 +20,7 @@ class RetrieveCompaniesController extends ApiController
 {
     #[Route('/api/retrieve_companies', name: 'api_retrieve_companies')]
     #[IsGranted("PUBLIC_ACCESS")]
-    public function index(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function index(Request $request, EntityManagerInterface $entityManager, LastUpdatedCompanies $lastUpdated): JsonResponse
     {
         $amount = $request->get('amount');
         $offset = ($request->get('offset') == null) ? 0 : $request->get('offset');
@@ -32,18 +35,40 @@ class RetrieveCompaniesController extends ApiController
             $companies = $entityManager->getRepository(Company::class)->findAllAmount($amount, $offset);
         }
 
-        $retData = [];
+        $retData = ["companies" => []];
         foreach ($companies as $company)
         {
-            $retData []= Company::toJsonArray($company);
+            $retData["companies"] []= Company::toJsonArray($company);
         }
+
+        $retData["nextUpdate"] = $lastUpdated->getNextUpdate();
 
         return new JsonResponse($retData);
     }
 
+    #[Route('api/retrieve_updated', name: 'api_retrieve_updated')]
+    #[IsGranted("PUBLIC_ACCESS")]
+    public function retrieveUpdated(EntityManagerInterface $entityManager, LastUpdatedCompanies $lastUpdated): JsonResponse
+    {
+        $data = [];
+
+        $lastUpdatedValues = $lastUpdated->getLastUpdated();
+        $data["nextUpdate"] = $lastUpdatedValues["nextUpdate"];
+
+        $companies = $entityManager->getRepository(Company::class)->findBy(["id" => $lastUpdatedValues["companies"]]);
+
+        $data["companies"] = [];
+        foreach($companies as $company)
+        {
+            $data["companies"] []= Company::toJsonArray($company);
+        }
+
+        return new JsonResponse($data);
+    }
+
     #[Route('api/company_details/{id}', name: 'api_company_details')]
     #[IsGranted("PUBLIC_ACCESS")]
-    public function getCmpDetails(int $id, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function getCmpDetails(int $id, Request $request, EntityManagerInterface $entityManager, LastUpdatedCompanies $lastUpdated): JsonResponse
     {
         if (empty($id) || $id <= 0){
             return $this->respondValidationError("Invalid company id ".strval($id));
@@ -69,6 +94,8 @@ class RetrieveCompaniesController extends ApiController
         {
             $data["prices"] []= PriceHistory::toJsonArray($historyElement);
         }
+
+        $data["nextUpdate"] = $lastUpdated->getNextUpdate();
 
         return new JsonResponse($data);
     }
