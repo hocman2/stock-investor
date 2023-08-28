@@ -108,6 +108,21 @@ class CompanyRepository extends ServiceEntityRepository
         $priceHistoryRepos->insertNewHistory($entity, $currentLifecycle);
     }
 
+    public function lastTwoPrices(Company $entity): array
+    {
+        $previousPrices = $entity->getPreviousPrices();
+        $count = count($previousPrices->toArray());
+
+        if ($count < 2)
+        {
+            return [$entity->getPrice(), $entity->getPrice()];
+        }
+        else
+        {
+            return array_values($previousPrices->slice($count - 2, 2));
+        }
+    }
+
 //    /**
 //     * @return Company[] Returns an array of Company objects
 //     */

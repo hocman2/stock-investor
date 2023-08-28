@@ -5,12 +5,15 @@
     import dateSelect from '../../dateSelect';
     import axios from 'axios';
     import { Chart } from 'chart.js/auto';
+    import { getRgbValue } from '../../utils.js';
 
     /** @type {import('./$types').PageData} */
     export let data;
 
     let allDates = {};
     let plotDates = [];
+    let timeframe = "1D";
+    let chart;
 
     let company = data.company;
     let user = $userStore;
@@ -124,6 +127,91 @@
         });
     }
 
+    function calcDiff()
+    {
+        let previousDate = Object.keys(plotDates)[Object.keys(plotDates).length - 2];
+        return company.price - plotDates[previousDate];
+    }
+
+    function createOrUpdateChart(update = false)
+    {
+        selectDates(timeframe);
+
+        // Calculate diff using the plotted dates
+        company.diff = calcDiff();
+
+        let graphColor = (company.diff < 0) ? getComputedStyle(document.querySelector('body')).getPropertyValue('--negative') : getComputedStyle(document.querySelector('body')).getPropertyValue('--positive');
+        graphColor = getRgbValue(graphColor);
+        let areaColor = graphColor.replace('rgb', 'rgba').replace(')', ', .3)');
+        
+        if (update && chart)
+        {
+            chart.data.labels = Object.keys(plotDates);
+            chart.data.datasets[0].data = Object.values(plotDates);
+            chart.data.datasets[0].borderColor = graphColor;
+            chart.data.datasets[0].fill.above = areaColor;
+            chart.update();
+            return;
+        }
+
+        let stockChartDiv = document.getElementById("stock-chart");
+        if (!stockChartDiv) return;
+
+        let ctx = stockChartDiv.getContext('2d');
+
+        let chartData = {
+            labels: Object.keys(plotDates),
+            datasets: [{
+                data: Object.values(plotDates),
+                borderWidth: 2,
+                label: "prices",
+                pointRadius: 0,
+                tension: 0.1,
+                fill: {
+                    target: "origin",
+                    above: areaColor,
+                },
+                borderColor: graphColor,
+            }],
+        };
+
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { 
+                        display: false,
+                    },
+                    tooltip: {
+                        displayColors: false,
+                        callbacks: {
+                            label: (context) => {
+                                let label = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
+                                return label;
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'x',
+                    intersect: false,
+                    axis: 'xy',
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: (val, index, ticks) => { 
+                            return `\$${parseFloat(val).toFixed(2)}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     onMount(() =>
     {
         if (user)
@@ -137,46 +225,132 @@
             allDates[new Date(priceObj.date.date + "Z").toISOString()] = priceObj.price;
         }
 
-        selectDates("1D");
-
-        let ctx = document.getElementById("stock-chart").getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: Object.keys(plotDates),
-                datasets: [{data: Object.values(plotDates), borderWidth: 1, label:"prices"}],
-            },
-            options: {
-                responsive: true,
-            }
-        });
+        createOrUpdateChart();
     });
 
 </script>
 
-<h1>{company.name} — ${company.price.toFixed(2)}</h1>
+<style>
+    .canvas-holder {
+        width: 95vw;
+        display:block;
+        margin: 20px auto;
+    }
+
+    .top-bar{
+        display:flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .top-bar > div {
+        text-align: right;
+    }
+
+    .top-bar > div > span:nth-child(1){
+        font-size: 13pt;
+        font-weight: 400;
+        font-style: normal;
+    }
+
+    .top-bar > div > span{
+        font-size: 11pt;
+        font-weight: 300;
+        font-style: italic;
+    }
+
+    .controls {
+        margin: 20px 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .amount {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .amount > input {
+        padding-right: 16px;
+        border-radius: 8px;
+        height: 24px;
+        border: none;
+        outline-width: 1px;
+        outline-style: solid;
+        direction: rtl;
+
+        text-align: right;
+        font-size: 10pt;
+        font-weight: 300;   
+        
+        outline-color: rgba(0, 0, 0, 0.25);
+        background-color: var(--background);
+    }
+
+    .buttons {
+        display: flex;
+        justify-content: space-evenly;
+        margin: 8px auto;
+    }
+
+    .buttons > button {
+        width: 100px;
+        margin: 0 8px; 
+    }
+
+    h1 {
+        margin: auto 0;
+    }
+    h2 {
+        margin: auto 0;
+    }
+    h3 {
+        margin: auto 0;
+    }
+</style>
+
+<div class="top-bar">
+    <h1>{company.name}</h1>
+    {#if user}
+        <div>
+            <span>Balance: ${user.balance.toFixed(2)}</span>
+            <br>
+            {#if data.share_amount > 0}
+                <span>Owns: {data.share_amount}</span>
+            {/if}
+        </div>
+    {/if}
+</div>
 {#if company.domain_name != "null"}
     <h2>{company.domain_name}</h2>
 {/if}
 
-{#if user}
-<div> 
-    <span>Balance: ${user.balance.toFixed(2)}</span>
-    <br>
-    {#if data.share_amount > 0}
-    <span>You currently own {data.share_amount} {data.share_amount == 1 ? "share" : "shares"} for this company</span>
-    {/if}
-</div>
-<div>
-    <label for="amount">Amount</label>
-    <input name="amount" type="number" bind:value={currentAmount} on:change={amountChanged}/>
-</div>
-<div>
-    <button on:click={ () => { buyOrder(company.id); } } class="buy-btn">Buy</button>
-    <button on:click={ () => { sellOrder(company.id); } } class="sell-btn">Sell</button>
-</div>
+<h3>${company.price.toFixed(2)}</h3>
 
-<div style="width: 80vw; height: 80vh; display:block">
+<div class="canvas-holder">
+    <select bind:value={timeframe} on:change={() => {createOrUpdateChart(true);}}>
+        <option selected value="1D">1D</option>
+        <option value="1M">1M</option>
+        <option value="3M">3M</option>
+        <option value="1Y">1Y</option>
+        <option value="all">All</option>
+    </select>
+
     <canvas id="stock-chart"></canvas>
 </div>
+
+{#if user}
+    <div class="controls">
+        <div>
+            <div class="amount">
+                <input placeholder="amount" name="amount" type="number" bind:value={currentAmount} on:change={amountChanged}/>
+            </div>
+            <div class="buttons">
+                <button on:click={ () => { buyOrder(company.id); } } class="buy-btn">Buy</button>
+                <button on:click={ () => { sellOrder(company.id); } } class="sell-btn">Sell</button>
+            </div>
+        </div>
+    </div>
 {/if}

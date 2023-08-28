@@ -1,71 +1,19 @@
 <script>
     import { userStore } from '../user_store';
     import { onMount } from 'svelte';
-    import axios from 'axios';
-    import { apiEndpoint } from '../config';
+    import { CompanyPeriodicUpdate } from '../CompanyPeriodicUpdate.js';
 
     /** @type {import('./$types').PageData} */
     export let data;
 
-    let companies = data.companies;
-    let nextUpdate = getNextUpdateDate(data.nextUpdate);
-    console.log(nextUpdate);
+    let companies = [];
     let user = $userStore;
 
+    // A flag for server error
     let serverError = data.serverError;
 
-    // Return nextUpdate date string as a Date object
-    function getNextUpdateDate(nextUpdate)
+    function updateCompanies(companiesToUpdate, companies = [])
     {
-        if (!nextUpdate) return undefined;
-
-        // Append Z to indicate UTC date
-        let formatedStr = nextUpdate.date + "Z";
-        return new Date(formatedStr);
-    }
-
-    // Sets the value of nextUpdate, returns false if the new nextUpdate is invalid
-    function setNextUpdateDate(nextUpdateData)
-    {
-        let newNextUpdate = getNextUpdateDate(nextUpdateData);
-
-        if (newNextUpdate.getTime() <= nextUpdate.getTime() || new Date() >= newNextUpdate)
-        {
-            return false;
-        }
-
-        nextUpdate = newNextUpdate;
-        callUpdateCompanies();
-        return true;
-    }
-
-    async function updateCompanies()
-    {
-        const functionRecallInterval = 10000;
-        let recall = false;
-        const response = await axios.get(apiEndpoint + '/retrieve_updated')
-        .catch((err) => 
-        {
-            if (err.code == "ERR_NETWORK" || err.response.status == 500)
-            {
-                serverError = true
-            }
-            else
-            {
-                recall = true;
-            }
-        });
-        
-        if (serverError) return;
-
-        if (recall || !setNextUpdateDate(response.data.nextUpdate)) 
-        {
-            setTimeout(updateCompanies, functionRecallInterval);
-            return;
-        }
-
-        let companiesToUpdate = response.data.companies;
-
         for (let i = 0; i < companiesToUpdate.length; ++i)
         {
             let company = companiesToUpdate[i];
@@ -81,33 +29,108 @@
             {
                 companies.push(company);
             }
+
+            calculateDiff(company);
         }
+
+        return companies;
     }
 
-    // Sets a timeout between now and nextUpdate that automatically calls updateCompanies
-    function callUpdateCompanies()
+    function calculateDiff(company)
     {
-        let timeout = nextUpdate - new Date();
+        if (!company.previousPrice)
+        {
+            return 0.0;
+        }
 
-        if (timeout > 0)
-        {
-            // We add a small 1sec offset to avoid calling the function right as the server is processing
-            setTimeout(updateCompanies, timeout + 1000);
-        }
-        else
-        {
-            updateCompanies();
-        }
+        let diff = company.price - company.previousPrice;
+
+        company.diff = diff;
+
+        return diff;
+    }
+
+    function clickRow(id)
+    {
+        window.location.href = '/' + id;
     }
 
     onMount(() => {
-        callUpdateCompanies();
+        companies = updateCompanies(data.companies, []);
+        let serverErrorFn = () => { serverError = true; };
+        (new CompanyPeriodicUpdate(data.nextUpdate, {fn: updateCompanies, companies: companies}, serverErrorFn)).callRetrieveUpdatedCompanies();
     });
 </script>
 
+<style>
+
+    .user-info {
+        float: right;
+        font-size: 16pt;
+        margin: 16px 16px;
+    }
+
+    .user-info>.balance {
+        color: var(--green-pale);
+    }
+
+    table {
+        border-spacing: 0;
+        width: 100%;
+    }
+
+    thead{
+        font-size: 14pt;
+        font-weight: 400;
+    }
+
+    th.h-name {
+        text-align: left;
+    }
+
+    th.h-price{
+        width: 15%;
+    }
+
+    th.h-diff{
+        width: 15%;
+    }
+
+    tbody:before {
+        line-height:16px;
+        content:"\200C";
+        display:block;
+    }
+
+    tbody > tr:hover {
+        cursor: pointer;
+        color: var(--green-highlight);
+        background-color: var(--background-highlight);
+    }
+
+    .price {
+        font-weight: 400;
+    }
+
+    .diff {
+        font-style: italic;
+        font-weight: 300;
+    }
+
+    .neg:not(:hover) {
+        color: var(--negative);
+    }
+
+    .pos:not(:hover) {
+        color: var(--positive);
+    }
+</style>
+
 {#if user}
-    <h1>Hello {user.username}</h1>
-    <h3>Current balance: ${user.balance.toFixed(2)}</h3>
+    <div class="user-info">
+        <span class="username">{user.username}: </span>
+        <span class="balance"> ${user.balance.toFixed(2)}</span>
+    </div>
 {/if}
 {#if serverError}
     <h3 style="color:red">Server error</h3>
@@ -115,18 +138,18 @@
     <table>
         <thead>
             <tr>
-                <th>Name</th>
-                <th>Price</th>
+                <th class="h-name">Company</th>
+                <th class="h-price">Price</th>
+                <th class="h-diff">Diff</th>
             </tr>
         </thead>
         <tbody>
             {#each companies as company }
-            <tr>
-                <a href={"/"+company.id}>
-                    <td>{company.name}</td>
-                    <td>${company.price.toFixed(2)}</td>
-                </a>
-            </tr>
+                <tr on:click={() => {clickRow(company.id)}}>
+                    <td class="name">{company.name}</td>
+                    <td class="price">$ {company.price.toFixed(2)}</td>
+                    <td class={`${(company.diff < 0) ? 'neg' : 'pos'} diff`}>{company.diff.toFixed(2)}</td>
+                </tr>
             {/each}
         </tbody>
     </table>

@@ -113,14 +113,21 @@ class Company
         return $this;
     }
 
-    static public function toJsonArray(Company $company): array
+    static public function toJsonArray(Company $company, float $previousPrice = NULL): array
     {
-        return [
+        $data = [
             "id" => $company->getId(),
             "name" => $company->getName(),
+            "domain_name" => ($company->getDomain() == null) ? "null" : $company->getDomain()->getName(),
             "price" => $company->getPrice(),
-            "domain_name" => ($company->getDomain() == null) ? "null" : $company->getDomain()->getName()
         ];
+
+        if ($previousPrice != NULL)
+        {
+            $data["previousPrice"] = $previousPrice;
+        }
+
+        return $data;
     }
 
     public function getTrend(): ?float

@@ -17,6 +17,11 @@ class LastUpdatedCompanies
     {
         $this->updateInterval = $updateInterval;
         $this->cache = new FilesystemAdapter();
+        
+        if (!$this->cache->get("nextUpdate", function(){}))
+        {
+            $this->updateNextUpdate();
+        }
     }
 
     private function updateNextUpdate()

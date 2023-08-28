@@ -24,21 +24,32 @@ class RetrieveCompaniesController extends ApiController
     {
         $amount = $request->get('amount');
         $offset = ($request->get('offset') == null) ? 0 : $request->get('offset');
-             
+        
+        /** @var CompanyRepository */
+        $companyRepos = $entityManager->getRepository(Company::class);
+
         $companies = null;
         if ($amount == null)
         {
-            $companies = $entityManager->getRepository(Company::class)->findAll();
+            $companies = $companyRepos->findAll();
         }
         else
         {
-            $companies = $entityManager->getRepository(Company::class)->findAllAmount($amount, $offset);
+            $companies = $companyRepos->findAllAmount($amount, $offset);
         }
 
         $retData = ["companies" => []];
         foreach ($companies as $company)
         {
-            $retData["companies"] []= Company::toJsonArray($company);
+            // Retrieve previous price of this company
+            $previousPrice = $companyRepos->lastTwoPrices($company)[0];
+
+            if (is_a($previousPrice, PriceHistory::class))
+            {
+                $previousPrice = $previousPrice->getPrice();
+            }
+
+            $retData["companies"] []= Company::toJsonArray($company, $previousPrice);
         }
 
         $retData["nextUpdate"] = $lastUpdated->getNextUpdate();
@@ -52,15 +63,25 @@ class RetrieveCompaniesController extends ApiController
     {
         $data = [];
 
+        $companyRepos = $entityManager->getRepository(Company::class);
+
         $lastUpdatedValues = $lastUpdated->getLastUpdated();
         $data["nextUpdate"] = $lastUpdatedValues["nextUpdate"];
 
-        $companies = $entityManager->getRepository(Company::class)->findBy(["id" => $lastUpdatedValues["companies"]]);
+        $companies = $companyRepos->findBy(["id" => $lastUpdatedValues["companies"]]);
 
         $data["companies"] = [];
         foreach($companies as $company)
         {
-            $data["companies"] []= Company::toJsonArray($company);
+            // Retrieve previous price of this company
+            $previousPrice = $companyRepos->lastTwoPrices($company)[0];
+
+            if (is_a($previousPrice, PriceHistory::class))
+            {
+                $previousPrice = $previousPrice->getPrice();
+            }
+
+            $data["companies"] []= Company::toJsonArray($company, $previousPrice);
         }
 
         return new JsonResponse($data);
@@ -76,7 +97,7 @@ class RetrieveCompaniesController extends ApiController
 
         // Retrieve company
         $company = $entityManager->getRepository(Company::class)->findOneById($id);
-        $data["company"] = Company::toJsonArray($company);
+        $data["company"] = Company::toJsonArray($company, NULL);
 
         // When a user is authenticated, we also want to return how much shares he owns for this company
         if ($this->getUser())
