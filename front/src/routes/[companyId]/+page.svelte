@@ -232,7 +232,7 @@
 
 <style>
     .canvas-holder {
-        width: 95vw;
+        width: 80vw;
         display:block;
         margin: 20px auto;
     }
