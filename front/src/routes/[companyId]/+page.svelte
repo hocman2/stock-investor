@@ -4,7 +4,7 @@
     import { onMount } from 'svelte';
     import dateSelect from '../../dateSelect';
     import axios from 'axios';
-    import { Chart } from 'chart.js/auto';
+    import { Chart } from '../../chart.js';
     import { getRgbValue } from '../../utils.js';
 
     /** @type {import('./$types').PageData} */
