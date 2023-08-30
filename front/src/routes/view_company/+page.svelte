@@ -7,15 +7,34 @@
     import { Chart } from '../../chart.js';
     import { getRgbValue } from '../../utils.js';
 
-    /** @type {import('./$types').PageData} */
-    export let data;
+    async function init() 
+    {
+        const companyId = new URLSearchParams(window.location.search).get('id');
+        console.log(companyId);
+        if (!companyId)
+        {
+            window.location.replace('/');
+        }
+
+        const response = await axios.get(apiEndpoint + "/company_details/" + companyId, {
+            withCredentials: true
+        }).catch((err) => { 
+            console.log(err);
+            // Invalid ID, return to home
+            window.location.replace('/');
+        });
+
+        return response.data;
+    };
+
+    let data;
 
     let allDates = {};
     let plotDates = [];
     let timeframe = "1D";
     let chart;
 
-    let company = data.company;
+    let company;
     let user = $userStore;
 
     let currentAmount = 1;
@@ -212,8 +231,11 @@
         });
     }
 
-    onMount(() =>
+    onMount(async () =>
     {
+        data = await init();
+        company = data.company;
+
         if (user)
         {
             amountChanged();
@@ -311,6 +333,8 @@
     }
 </style>
 
+{#if company}
+
 <div class="top-bar">
     <h1>{company.name}</h1>
     {#if user}
@@ -353,4 +377,6 @@
             </div>
         </div>
     </div>
+{/if}
+
 {/if}

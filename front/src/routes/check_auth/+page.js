@@ -2,12 +2,15 @@ import axios from 'axios';
 import { apiEndpoint } from '../../config';
 
 /** @type {import(./$types).PageLoad} */
-export async function load({params})
+export async function load()
 {
     let errStatus = 200;
     await axios.get(apiEndpoint + "/user_data", { withCredentials: true }
     ).catch((err) => {      
-        errStatus = err.response.status;
+        if (err.response)
+        {
+            errStatus = err.response.status;
+        }
     });
 
     if (errStatus == 401)

@@ -52,7 +52,7 @@
 
     function clickRow(id)
     {
-        window.location.href = '/' + id;
+        window.location.href = '/view_company?id=' + id;
     }
 
     onMount(() => {
